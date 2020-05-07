@@ -5,21 +5,19 @@ const Product = mongoose.model("products");
 var requireLogin = require("../middlewares/requireLogin");
 
 module.exports = (app) => {
-  
-    //Add Purchases
+  //Add Purchases
   app.post("/api/purchases", requireLogin, async (req, res) => {
     const { quantity, productName } = req.body;
 
     const existingProduct = await Product.findOne({ name: productName });
 
     if (!existingProduct) {
-      return res.status(404).send({ error: "Product does not exist" });
+      return res.status(404).json({ error: "Product does not exist" });
     }
 
     const purchase = new Purchase({
       quantity,
       _product: existingProduct.id,
-      //_supplier: req.user.name,
       datePurchased: Date.now(),
     });
     existingProduct.inventoryReceived += quantity; //increase inventory received,
@@ -28,15 +26,15 @@ module.exports = (app) => {
     try {
       const purchases = await purchase.save();
       await existingProduct.save();
-      res.status(200).send("Purchase successfully saved"); //or send true
+      res.status(200).json({ message: "Purchase successful" }); //or send true
     } catch (err) {
-      res.status(422).send(err);
+      res.status(422).json({ error: err });
     }
   });
 
   app.get("/api/purchases", requireLogin, async (req, res) => {
     let purchases = await Purchase.find({});
-    res.status(200).send(purchases);
+    res.status(200).json(purchases);
   });
 
   //get a particular purchase
@@ -46,12 +44,12 @@ module.exports = (app) => {
     if (mongoose.Types.ObjectId.isValid(purchaseId)) {
       let purchase = await Purchase.findById(purchaseId);
       if (purchase) {
-        res.status(200).send(purchase);
+        res.status(200).json(purchase);
       } else {
-        return res.status(404).send({ error: "Purchase does not exist" });
+        return res.status(404).json({ error: "Purchase does not exist" });
       }
     } else {
-      return res.status(400).send({ error: "Invalid Request" });
+      return res.status(400).json({ error: "Invalid Request" });
     }
   });
 
@@ -59,6 +57,7 @@ module.exports = (app) => {
   app.get(
     "/api/purchaseforproduct/:productName",
     requireLogin,
+
     async (req, res) => {
       let { productName } = req.params;
 
@@ -66,12 +65,10 @@ module.exports = (app) => {
       if (existingProduct) {
         let purchases = await Purchase.find({ _product: existingProduct._id });
 
-        return res.status(200).send(purchases);
+        return res.status(200).json(purchases);
       } else {
-        return res.status(404).send({ error: "Product does not exist" });
+        return res.status(404).json({ error: "Product does not exist" });
       }
     }
   );
-
-
 };

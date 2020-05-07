@@ -11,7 +11,7 @@ module.exports = (app) => {
     const existingProduct = await Product.findOne({ name: productName });
 
     if (!existingProduct) {
-      return res.status(404).send({ error: "Product does not exist" });
+      return res.status(404).json({ error: "Product does not exist" });
     }
 
     const order = new Order({
@@ -20,21 +20,21 @@ module.exports = (app) => {
       orderedBy: req.user.name,
       dateOrdered: Date.now(),
     });
-    existingProduct.inventoryShipped += quantity; //increase inventory shipped,
-    existingProduct.inventoryOnHand -= quantity; //decrease inventory on hand
+    existingProduct.inventoryShipped += quantity;
+    existingProduct.inventoryOnHand -= quantity;
 
     try {
       const orders = await order.save();
       await existingProduct.save();
-      res.status(200).send("Order successfully svaved"); //or send true
+      res.status(200).json({ message: "Order successful" });
     } catch (err) {
-      res.status(422).send(err);
+      res.status(422).json({ error: err });
     }
   });
 
   app.get("/api/orders", requireLogin, async (req, res) => {
     let orders = await Order.find({});
-    res.status(200).send(orders);
+    res.status(200).json(orders);
   });
 
   //get a particular order
@@ -43,12 +43,12 @@ module.exports = (app) => {
     if (mongoose.Types.ObjectId.isValid(orderId)) {
       let order = await Order.findById(orderId);
       if (order) {
-        res.status(200).send(order);
+        res.status(200).json(order);
       } else {
-        return res.status(404).send({ error: "Order does not exist" });
+        return res.status(404).json({ error: "Order does not exist" });
       }
     } else {
-      return res.status(400).send({ error: "Invalid Request" });
+      return res.status(400).json({ error: "Invalid Request" });
     }
   });
 
@@ -56,6 +56,7 @@ module.exports = (app) => {
   app.get(
     "/api/ordersforproduct/:productName",
     requireLogin,
+
     async (req, res) => {
       let { productName } = req.params;
 
@@ -63,9 +64,9 @@ module.exports = (app) => {
       if (existingProduct) {
         let orders = await Order.find({ _product: existingProduct._id });
 
-        return res.status(200).send(orders);
+        return res.status(200).json(orders);
       } else {
-        return res.status(404).send({ error: "Product does not exist" });
+        return res.status(404).json({ error: "Product does not exist" });
       }
     }
   );

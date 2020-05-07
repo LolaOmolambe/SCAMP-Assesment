@@ -8,7 +8,6 @@ require("./models/User");
 require("./models/Product");
 require("./models/Order");
 require("./models/Purchase");
-require("./models/Supplier");
 
 require("./services/passport");
 
@@ -33,3 +32,5 @@ require("./routes/purchaseRoutes")(app);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT);
+
+//module.exports = app; //for testing
